@@ -86,6 +86,11 @@ public class DroneController implements AutoCloseable {
         return this;
     }
 
+    public DroneController stopAnnimation() throws IOException {
+        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 0));
+        return this;
+    }
+
     public DroneController spin() throws IOException {
         this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 1));
         return this;
@@ -116,20 +121,18 @@ public class DroneController implements AutoCloseable {
         return this;
     }
 
-    /*public DroneController spintoposture() throws IOException {
-        this.sendCommand(
-            new byte[] { 0x04, 0x0b, ackCounter++, 0x0f, 0x00, 0x00, 0x00, 0x03, 0x02, 0x04, 0x00, 0x07, 0x00, 0x00,
-                0x00 });
-        return this;
-    }*/
-
-    public DroneController spiral() throws IOException {
+    public DroneController spintoposture() throws IOException {
         this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 7));
         return this;
     }
 
-    public DroneController slalom() throws IOException {
+    public DroneController spiral() throws IOException {
         this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 8));
+        return this;
+    }
+
+    public DroneController slalom() throws IOException {
+        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 9));
         return this;
     }
 }

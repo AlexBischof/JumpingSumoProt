@@ -150,8 +150,8 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
             SECONDS.sleep(2);
             break;
         case VK_7:
-         //   droneController.spintoposture();
-         //   SECONDS.sleep(2);
+            droneController.spintoposture();
+            SECONDS.sleep(2);
             break;
         case VK_8:
             droneController.spiral();
@@ -161,35 +161,30 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
             droneController.slalom();
             SECONDS.sleep(2);
             break;
-
+        case VK_0:
+            droneController.stopAnnimation();
+            break;
         case VK_A:
-            turnMinus90();
+            turn90Left();
             break;
         case VK_D:
-            turn90();
+            turn90Right();
             break;
-        case VK_W:
+        case VK_S:
             turn180();
-            break;
-        case VK_X:
-            turnMinus180();
             break;
         }
     }
 
-    private void turn90() throws IOException {
+    private void turn90Right() throws IOException {
         droneController.pcmd(0, 25);
     }
 
-    private void turnMinus90() throws IOException {
+    private void turn90Left() throws IOException {
         droneController.pcmd(0, -25);
     }
 
     private void turn180() throws IOException {
         droneController.pcmd(0, 50);
-    }
-
-    private void turnMinus180() throws IOException {
-        droneController.pcmd(0, -50);
     }
 }
