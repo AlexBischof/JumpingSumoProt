@@ -33,7 +33,7 @@ public class DoTcpHandshake implements AutoCloseable {
         tcpOut.println(shakeData);
 
         //Reads json response
-        String responseLine = null;
+        String responseLine;
         HandshakeAnswer deviceAnswer = null;
         ObjectMapper objectMapper = new ObjectMapper();
         while ((responseLine = tcpIn.readLine()) != null) {
