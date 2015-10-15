@@ -37,7 +37,6 @@ public class DoTcpHandshake implements AutoCloseable {
         HandshakeAnswer deviceAnswer = null;
         ObjectMapper objectMapper = new ObjectMapper();
         while ((responseLine = tcpIn.readLine()) != null) {
-            System.out.println(responseLine);
             responseLine = responseLine.substring(0, responseLine.lastIndexOf("}") + 1);
             deviceAnswer = objectMapper.readValue(responseLine, HandshakeAnswer.class);
         }

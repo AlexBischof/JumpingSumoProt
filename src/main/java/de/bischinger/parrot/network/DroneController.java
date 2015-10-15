@@ -1,13 +1,18 @@
 package de.bischinger.parrot.network;
 
+import de.bischinger.parrot.gui.CommandReader;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.logging.Logger;
 
-import static de.bischinger.parrot.gui.Command.JUMP;
-import static de.bischinger.parrot.gui.Command.PCMD;
-import static de.bischinger.parrot.gui.Command.SimpleAnimation;
+import static de.bischinger.parrot.gui.Command.*;
+import static java.lang.String.format;
 import static java.net.InetAddress.getByName;
 
 /**
@@ -15,20 +20,56 @@ import static java.net.InetAddress.getByName;
  */
 public class DroneController implements AutoCloseable {
 
+    private Logger logger = Logger.getLogger("DroneController");
+
     private DatagramSocket controller2DeviceSocket;
     private String deviceIp;
     private int controller2DevicePort;
 
     private byte nonackCounter = 0;
     private byte ackCounter = 0;
+    private List<EventListener> eventListeners = new ArrayList<>();
 
     public DroneController(String deviceIp, int tcpPort, HandshakeRequest handshakeRequest) throws Exception {
 
+        logger.info(format("Creating DroneController for %s:%s...", deviceIp, tcpPort));
         this.deviceIp = deviceIp;
         HandshakeAnswer handshakeAnswer = new DoTcpHandshake(deviceIp, tcpPort).shake(handshakeRequest);
+        logger.info(format("Handshake completed with %s", handshakeAnswer));
         controller2DevicePort = handshakeAnswer.getC2d_port();
 
         controller2DeviceSocket = new DatagramSocket();
+
+        addAnswerSocket();
+    }
+
+    private void addAnswerSocket() {
+
+        new Thread(() -> {
+            try (DatagramSocket sumoSocket = new DatagramSocket(controller2DevicePort)) {
+                logger.info(format("Listing for answers on port %s", controller2DevicePort));
+                int pingCounter = 0;
+                while (true) {
+                    byte[] buf = new byte[512];
+
+                    DatagramPacket packet = new DatagramPacket(buf, buf.length);
+                    sumoSocket.receive(packet);
+                    byte[] data = packet.getData();
+
+                    //Sends pong every 4 pings
+                    //FIXME
+                    CommandReader commandReader = CommandReader.commandReader(data);
+                    if (commandReader.isPing() && pingCounter++ % 4 == 0) {
+                      //  System.out.println("Sedning pong: ");
+                        pcmd(0,0);
+                    }
+
+                    eventListeners.forEach(eventListener -> eventListener.eventFired(data));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     @Override
@@ -37,12 +78,11 @@ public class DroneController implements AutoCloseable {
     }
 
     public void sendCommand(byte[] packetAsBytes)
-        throws IOException {
-        // System.out.println("Sending command: " + Arrays.toString(packetAsBytes));
+            throws IOException {
 
         DatagramPacket packet = new DatagramPacket(packetAsBytes, packetAsBytes.length,
-                                                   getByName(deviceIp), controller2DevicePort);
-
+                getByName(deviceIp), controller2DevicePort);
+        logger.fine(format("Sending command: %s", Arrays.toString(packetAsBytes)));
         controller2DeviceSocket.send(packet);
 
         postSend();
@@ -66,8 +106,17 @@ public class DroneController implements AutoCloseable {
         return this;
     }
 
-    public DroneController turn180() throws IOException {
-        this.sendCommand(PCMD.getCommand(++nonackCounter, 0, 50));
+    public DroneController left(int degrees) throws IOException {
+        if (degrees >= 0 && degrees < 360) {
+            this.sendCommand(PCMD.getCommand(++nonackCounter, 0, -25 * degrees / 90));
+        }
+        return this;
+    }
+
+    public DroneController right(int degrees) throws IOException {
+        if (degrees >= 0 && degrees < 360) {
+            this.sendCommand(PCMD.getCommand(++nonackCounter, 0, 25 * degrees / 90));
+        }
         return this;
     }
 
@@ -133,6 +182,24 @@ public class DroneController implements AutoCloseable {
 
     public DroneController slalom() throws IOException {
         this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 9));
+        return this;
+    }
+
+    public DroneController addBatteryListener(Consumer<BatteryState> consumer) {
+        this.eventListeners.add(data -> {
+            if (data[7] == 3 && data[8] == 1 && data[9] == 1) {
+                consumer.accept(BatteryState.values()[data[11]]);
+            }
+        });
+        return this;
+    }
+
+    public DroneController addPCMDListener(Consumer<String> consumer) {
+        this.eventListeners.add(data -> {
+            if (data[7] == 3 && data[8] == 1 && data[9] == 0) {
+                consumer.accept("" + data[11]);
+            }
+        });
         return this;
     }
 }

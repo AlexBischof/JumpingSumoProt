@@ -15,19 +15,23 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatcher {
 
-    public static final int SPEED_CONSTANT = 40;
-    public static final int TURN_CONSTANT = 10;
+    private final int speedConfig;
+    private final int turnspeedConfig;
+
     private DroneController droneController;
     private boolean isUpPressed;
     private boolean isDownPressed;
     private boolean isLeftPressed;
     private boolean isRightPressed;
+    private Thread thread;
 
-    public KeyboardDriver() throws Exception {
+    public KeyboardDriver(int speedConfig, int turnspeedConfig) throws Exception {
 
+        this.speedConfig = speedConfig;
+        this.turnspeedConfig = turnspeedConfig;
         droneController = new DroneController("192.168.2.1", 44444,
-                                              new HandshakeRequest("JumpingSumo-b152298",
-                                                                   "_arsdk-0902._udp"));
+                new HandshakeRequest("JumpingSumo-b152298",
+                        "_arsdk-0902._udp"));
         initComponents();
     }
 
@@ -40,7 +44,11 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
         setOpacity(0.8f);
         setSize(200, 200);
         setVisible(true);
-        new Thread(this).start();
+        this.thread = new Thread(this);
+        this.thread.start();
+
+        droneController.addBatteryListener(b -> System.out.println("BatteryState: " + b));
+        droneController.addPCMDListener(b -> System.out.println("PCMD: " + b));
 
         getCurrentKeyboardFocusManager().addKeyEventDispatcher(this);
     }
@@ -53,18 +61,15 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
 
                 // set speed
                 int speed = 0;
-                if (isUpPressed) speed = SPEED_CONSTANT;
-                else if (isDownPressed) speed = -1 * SPEED_CONSTANT;
+                if (isUpPressed) speed = speedConfig;
+                else if (isDownPressed) speed = -1 * speedConfig;
 
                 // set direction
                 int direction = 0;
-                if (isLeftPressed) direction = -TURN_CONSTANT;
-                else if (isRightPressed) direction = TURN_CONSTANT;
+                if (isLeftPressed) direction = -turnspeedConfig;
+                else if (isRightPressed) direction = turnspeedConfig;
 
-                //optimization
-                if (!(speed == 0 && direction == 0)) {
-                    droneController.pcmd(speed, direction);
-                }
+                droneController.pcmd(speed, direction);
             } catch (Exception e1) {
                 e1.printStackTrace();
             }
@@ -89,90 +94,94 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
 
     private void handleKeyReleased(int keyCode) {
         switch (keyCode) {
-        case VK_UP:
-            isUpPressed = false;
-            break;
-        case VK_DOWN:
-            isDownPressed = false;
-            break;
-        case VK_LEFT:
-            isLeftPressed = false;
-            break;
-        case VK_RIGHT:
-            isRightPressed = false;
-            break;
+            case VK_UP:
+                isUpPressed = false;
+                break;
+            case VK_DOWN:
+                isDownPressed = false;
+                break;
+            case VK_LEFT:
+                isLeftPressed = false;
+                break;
+            case VK_RIGHT:
+                isRightPressed = false;
+                break;
         }
     }
 
     private void handleKeyPressed(int keyCode) throws IOException, InterruptedException {
         switch (keyCode) {
-        case VK_UP:
-            isUpPressed = true;
-            break;
-        case VK_DOWN:
-            isDownPressed = true;
-            break;
-        case VK_LEFT:
-            isLeftPressed = true;
-            break;
-        case VK_RIGHT:
-            isRightPressed = true;
-            break;
-        case VK_H:
-            droneController.jump(true);
-            SECONDS.sleep(2);
-            break;
-        case VK_J:
-            droneController.jump(true);
-            break;
-        case VK_1:
-            droneController.spin();
-            SECONDS.sleep(2);
-            break;
-        case VK_2:
-            droneController.tap();
-            SECONDS.sleep(2);
-            break;
-        case VK_3:
-            droneController.slowshake();
-            SECONDS.sleep(2);
-            break;
-        case VK_4:
-            droneController.metronome();
-            SECONDS.sleep(2);
-            break;
-        case VK_5:
-            droneController.ondulation();
-            SECONDS.sleep(2);
-            break;
-        case VK_6:
-            droneController.spinjump();
-            SECONDS.sleep(2);
-            break;
-        case VK_7:
-            droneController.spintoposture();
-            SECONDS.sleep(2);
-            break;
-        case VK_8:
-            droneController.spiral();
-            SECONDS.sleep(2);
-            break;
-        case VK_9:
-            droneController.slalom();
-            SECONDS.sleep(2);
-            break;
-        case VK_0:
-            droneController.stopAnnimation();
-            break;
-        case VK_A:
-            turn90Left();
-            break;
-        case VK_D:
-            turn90Right();
-            break;
-        case VK_S:
-            turn180();
-            break;
+            case VK_UP:
+                isUpPressed = true;
+                break;
+            case VK_DOWN:
+                isDownPressed = true;
+                break;
+            case VK_LEFT:
+                isLeftPressed = true;
+                break;
+            case VK_RIGHT:
+                isRightPressed = true;
+                break;
+            case VK_H:
+                droneController.jump(true);
+                SECONDS.sleep(2);
+                break;
+            case VK_J:
+                droneController.jump(true);
+                break;
+            case VK_1:
+                droneController.spin();
+                SECONDS.sleep(1);
+                break;
+            case VK_2:
+                droneController.tap();
+                SECONDS.sleep(1);
+                break;
+            case VK_3:
+                droneController.slowshake();
+                SECONDS.sleep(1);
+                break;
+            case VK_4:
+                droneController.metronome();
+                SECONDS.sleep(1);
+                break;
+            case VK_5:
+                droneController.ondulation();
+                SECONDS.sleep(1);
+                break;
+            case VK_6:
+                droneController.spinjump();
+                SECONDS.sleep(1);
+                break;
+            case VK_7:
+                //Wegen Devoxx4Kids auskommentiert
+                //droneController.spintoposture();
+                //SECONDS.sleep(1);
+                break;
+            case VK_8:
+                droneController.spiral();
+                SECONDS.sleep(1);
+                break;
+            case VK_9:
+                droneController.slalom();
+                SECONDS.sleep(1);
+                break;
+            case VK_0:
+                droneController.stopAnnimation();
+                break;
+            case VK_A:
+                turn90Left();
+                SECONDS.sleep(2);
+                break;
+            case VK_D:
+                turn90Right();
+                SECONDS.sleep(2);
+                break;
+            case VK_S:
+                turn180();
+                SECONDS.sleep(2);
+                break;
         }
     }
 

@@ -1,0 +1,6 @@
+rechts 10
+vor
+vor
+rechts 10
+rechts 10
+zurueck

@@ -4,7 +4,6 @@ import de.bischinger.parrot.network.DroneController;
 import de.bischinger.parrot.network.HandshakeRequest;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -16,9 +15,10 @@ public class ProgrammaticDriver {
 
     public ProgrammaticDriver() throws Exception {
         drone = new DroneController("192.168.2.1", 44444,
-                                    new HandshakeRequest("JumpingSumo-b152298",
-                                                         "_arsdk-0902._udp")) {
-            @Override protected void postSend() {
+                new HandshakeRequest("JumpingSumo-b152298",
+                        "_arsdk-0902._udp")) {
+            @Override
+            protected void postSend() {
                 try {
                     MILLISECONDS.sleep(580);
                 } catch (InterruptedException e) {
@@ -26,6 +26,7 @@ public class ProgrammaticDriver {
                 }
             }
         };
+        drone.pcmd(0, 0);
     }
 
     public void drive() throws IOException, InterruptedException {
