@@ -13,10 +13,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 public class ProgrammaticDriver {
     private DroneController drone;
 
-    public ProgrammaticDriver() throws Exception {
-        drone = new DroneController("192.168.2.1", 44444,
-                new HandshakeRequest("JumpingSumo-b152",
-                        "_arsdk-0902._udp")) {
+    public ProgrammaticDriver(String ip, int port, String sumoWlan) throws Exception {
+        drone = new DroneController(ip, port, new HandshakeRequest(sumoWlan,"_arsdk-0902._udp")) {
             @Override
             protected void postSend() {
                 try {
@@ -30,7 +28,7 @@ public class ProgrammaticDriver {
     }
 
     public void drive() throws IOException, InterruptedException {
-        drone.left(180);
+        drone.forward().forward().left(90);
         System.exit(0);
     }
 }

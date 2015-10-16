@@ -9,12 +9,12 @@ import java.net.Socket;
 /**
  * Created by Alexander Bischof on 05.10.15.
  */
-public class DoTcpHandshake implements AutoCloseable {
+public class TcpHandshake implements AutoCloseable {
     private Socket tcpSocket;
     private PrintWriter tcpOut;
     private BufferedReader tcpIn;
 
-    public DoTcpHandshake(String deviceIp, int tcpPort) throws IOException {
+    public TcpHandshake(String deviceIp, int tcpPort) throws IOException {
         tcpSocket = new Socket(deviceIp, tcpPort);
         tcpOut = new PrintWriter(tcpSocket.getOutputStream(), true);
         tcpIn = new BufferedReader(new InputStreamReader(tcpSocket.getInputStream()));

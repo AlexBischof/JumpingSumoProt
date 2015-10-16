@@ -1,10 +1,10 @@
 # JumpingSumoProt
 
-Dieser Prototyp verbindet sich aktuell statisch zu einem JumpingSumo, d.h. 192.168.2.1 Port 4444.
+Dieser Prototyp verbindet sich aktuell statisch zu einem JumpingSumo, d.h. 192.168.2.1 Port 44444.
 
-Beinhaltet die folgenden 3 Modi:
+Beinhaltet die folgenden 4 Modi:
 
-```java -jar jumpingSumo-jar-with-dependencies.jar <keyboard|program|file>``` 
+```java -jar jumpingSumo-jar-with-dependencies.jar <keyboard|program|file|swing>```
 
 1. Keyboard-Driven (KeyboardDriver)
   - Pfeiltasten: Vorwärts, Rückwärts, Links, Rechts

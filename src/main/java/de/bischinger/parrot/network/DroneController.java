@@ -35,7 +35,7 @@ public class DroneController implements AutoCloseable {
 
         logger.info(format("Creating DroneController for %s:%s...", deviceIp, tcpPort));
         this.deviceIp = deviceIp;
-        HandshakeAnswer handshakeAnswer = new DoTcpHandshake(deviceIp, tcpPort).shake(handshakeRequest);
+        HandshakeAnswer handshakeAnswer = new TcpHandshake(deviceIp, tcpPort).shake(handshakeRequest);
         logger.info(format("Handshake completed with %s", handshakeAnswer));
         controller2DevicePort = handshakeAnswer.getC2d_port();
 
