@@ -20,6 +20,12 @@ Beinhaltet die folgenden 3 Modi:
 	  - (6) Drehsprung
 	  - (8) Spirale
 	  - (9) Slalom
+  - Sound:
+      - (Y) Laut
+      - (X) Ohne Sound
+      - (I) Monster Theme
+      - (O) Insect Theme
+      - (P) Robot Theme
 
 2. Java-Driven (ProgrammaticDriver)
   

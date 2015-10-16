@@ -70,11 +70,9 @@ public class FileBasedProgrammaticDriver {
 
     private void readCommands() throws URISyntaxException, IOException {
         List<String> commands = Files.readAllLines(Paths.get(FILENAME));
-        System.out.println("---"+ commands.size());
         commands.forEach(command -> {
             try {
                 String lowercaseCommand = command.toLowerCase().trim();
-                System.out.println(lowercaseCommand);
                 switch (lowercaseCommand) {
                     case "vor":
                         drone.forward();

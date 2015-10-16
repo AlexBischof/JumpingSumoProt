@@ -15,7 +15,7 @@ public class ProgrammaticDriver {
 
     public ProgrammaticDriver() throws Exception {
         drone = new DroneController("192.168.2.1", 44444,
-                new HandshakeRequest("JumpingSumo-b152298",
+                new HandshakeRequest("JumpingSumo-b152",
                         "_arsdk-0902._udp")) {
             @Override
             protected void postSend() {
@@ -30,6 +30,7 @@ public class ProgrammaticDriver {
     }
 
     public void drive() throws IOException, InterruptedException {
-        drone.forward().left().right().forward().backward();
+        drone.left(180);
+        System.exit(0);
     }
 }

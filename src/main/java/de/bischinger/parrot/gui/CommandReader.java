@@ -17,4 +17,8 @@ public class CommandReader {
     public boolean isPing() {
         return data[0] == 2 && data[1] == 0;
     }
+
+    public boolean isAllWifiAuthChannelChanged() {
+        return data[0] == 3 && data[1] == 11 && data[2] == 4;
+    }
 }

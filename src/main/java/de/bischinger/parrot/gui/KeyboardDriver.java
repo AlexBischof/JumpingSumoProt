@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import static java.awt.KeyboardFocusManager.getCurrentKeyboardFocusManager;
 import static java.awt.event.KeyEvent.*;
@@ -30,8 +31,11 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
         this.speedConfig = speedConfig;
         this.turnspeedConfig = turnspeedConfig;
         droneController = new DroneController("192.168.2.1", 44444,
-                new HandshakeRequest("JumpingSumo-b152298",
+               // new HandshakeRequest("JumpingSumo-b152298",
+                new HandshakeRequest("JumpingSumo-b169798",
                         "_arsdk-0902._udp"));
+        droneController.insectTheme();
+
         initComponents();
     }
 
@@ -48,6 +52,7 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
         this.thread.start();
 
         droneController.addBatteryListener(b -> System.out.println("BatteryState: " + b));
+        droneController.addCriticalBatteryListener(b -> System.out.println("Critical-BatteryState: " + b));
         droneController.addPCMDListener(b -> System.out.println("PCMD: " + b));
 
         getCurrentKeyboardFocusManager().addKeyEventDispatcher(this);
@@ -128,7 +133,7 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
                 SECONDS.sleep(2);
                 break;
             case VK_J:
-                droneController.jump(true);
+                droneController.jump(false);
                 break;
             case VK_1:
                 droneController.spin();
@@ -181,6 +186,21 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
             case VK_S:
                 turn180();
                 SECONDS.sleep(2);
+                break;
+            case VK_I:
+                droneController.monsterTheme();
+                break;
+            case VK_O:
+                droneController.insectTheme();
+                break;
+            case VK_Y:
+                droneController.silent();
+                break;
+            case VK_X:
+                droneController.loud();
+                break;
+            case VK_P:
+                droneController.robotTheme();
                 break;
         }
     }
