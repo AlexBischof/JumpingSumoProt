@@ -180,21 +180,28 @@ public class KeyboardDriver extends JFrame implements Runnable, KeyEventDispatch
                 turn180();
                 SECONDS.sleep(2);
                 break;
+            case VK_Q:
+                droneController.outdoorSpeedMax();
+                break;
+            case VK_W:
+                droneController.outdoorSpeedDefault();
+                break;
             case VK_I:
-                droneController.monsterTheme();
+                droneController.audio().monsterTheme();
                 break;
             case VK_O:
-                droneController.insectTheme();
-                break;
-            case VK_Y:
-                droneController.silent();
-                break;
-            case VK_X:
-                droneController.loud();
+                droneController.audio().insectTheme();
                 break;
             case VK_P:
-                droneController.robotTheme();
+                droneController.audio().robotTheme();
                 break;
+            case VK_Y:
+                droneController.audio().mute();
+                break;
+            case VK_X:
+                droneController.audio().unmute();
+                break;
+
         }
     }
 

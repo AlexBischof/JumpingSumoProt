@@ -1,4 +1,4 @@
-package de.bischinger.parrot.gui;
+package de.bischinger.parrot.network;
 
 /**
  * Created by Alexander Bischof on 10.10.15.
@@ -24,6 +24,9 @@ public interface Command {
 
     Command AudioTheme = (counter, themeNr) -> new byte[]{4, 11, (byte) counter, 15, 0, 0, 0,
             3, 12, 1, 0, (byte) themeNr[0], 0, 0, 0};
+
+    Command OutdoorSpeed = (counter, speed) -> new byte[]{4, 11, (byte) counter, 15, 0, 0, 0,
+            3, 16, 1, 0, (byte) speed[0], 0, 0, 0};
 
     Command Volume = (counter, soundVal) -> new byte[]{4, 11, (byte) counter, 12, 0, 0, 0,
             3, 12, 0, 0, (byte)soundVal[0], 0};

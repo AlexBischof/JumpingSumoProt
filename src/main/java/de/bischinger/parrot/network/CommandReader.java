@@ -1,4 +1,4 @@
-package de.bischinger.parrot.gui;
+package de.bischinger.parrot.network;
 
 /**
  * Created by Alexander Bischof on 11.10.15.

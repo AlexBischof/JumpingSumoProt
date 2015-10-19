@@ -1,8 +1,5 @@
 package de.bischinger.parrot.network;
 
-import de.bischinger.parrot.gui.Command;
-import de.bischinger.parrot.gui.CommandReader;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -10,7 +7,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-import static de.bischinger.parrot.gui.Command.*;
+import static de.bischinger.parrot.network.Command.*;
 import static java.lang.String.format;
 import static java.net.InetAddress.getByName;
 
@@ -209,30 +206,10 @@ public class DroneController implements AutoCloseable {
         return this;
     }
 
-    public DroneController robotTheme() throws IOException {
-        this.sendCommand(AudioTheme.getCommand(++ackCounter, 1));
-        return this;
+    public AudioController audio() {
+        return new AudioController();
     }
 
-    public DroneController insectTheme() throws IOException {
-        this.sendCommand(AudioTheme.getCommand(++ackCounter, 2));
-        return this;
-    }
-
-    public DroneController monsterTheme() throws IOException {
-        this.sendCommand(AudioTheme.getCommand(++ackCounter, 3));
-        return this;
-    }
-
-    public DroneController silent() throws IOException {
-        this.sendCommand(Volume.getCommand(++ackCounter, 0));
-        return this;
-    }
-
-    public DroneController loud() throws IOException {
-        this.sendCommand(Volume.getCommand(++ackCounter, 100));
-        return this;
-    }
 
     public DroneController addCriticalBatteryListener(Consumer<BatteryState> consumer) {
         this.eventListeners.add(data -> {
@@ -267,5 +244,42 @@ public class DroneController implements AutoCloseable {
 
     private boolean filterProject(byte[] data, int project, int clazz, int cmd) {
         return data[7] == project && data[8] == clazz && data[9] == cmd;
+    }
+
+    public DroneController outdoorSpeedMax() throws IOException {
+        sendCommand(OutdoorSpeed.getCommand(++ackCounter, 1));
+        return this;
+    }
+
+    public DroneController outdoorSpeedDefault() throws IOException {
+        sendCommand(OutdoorSpeed.getCommand(++ackCounter, 0));
+        return this;
+    }
+
+    public class AudioController {
+        public AudioController robotTheme() throws IOException {
+            sendCommand(AudioTheme.getCommand(++ackCounter, 1));
+            return this;
+        }
+
+        public AudioController insectTheme() throws IOException {
+            sendCommand(AudioTheme.getCommand(++ackCounter, 2));
+            return this;
+        }
+
+        public AudioController monsterTheme() throws IOException {
+            sendCommand(AudioTheme.getCommand(++ackCounter, 3));
+            return this;
+        }
+
+        public AudioController mute() throws IOException {
+            sendCommand(Volume.getCommand(++ackCounter, 0));
+            return this;
+        }
+
+        public AudioController unmute() throws IOException {
+            sendCommand(Volume.getCommand(++ackCounter, 100));
+            return this;
+        }
     }
 }
