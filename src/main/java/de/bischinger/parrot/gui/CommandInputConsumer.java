@@ -2,6 +2,7 @@ package de.bischinger.parrot.gui;
 
 import de.bischinger.parrot.network.DroneController;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static java.lang.Integer.parseInt;
@@ -41,16 +42,20 @@ public class CommandInputConsumer implements Consumer<String> {
                     drone.jump(false);
                     break;
                 default:
-                    //Handling for links/rechts mit winkel
-                    if (lowercaseCommand.startsWith("links")) {
-                        int degrees = parseInt(lowercaseCommand.split(" ")[1]);
-                        drone.left(-90 * degrees / 25);
-                    } else if (lowercaseCommand.startsWith("rechts")) {
-                        int degrees = parseInt(lowercaseCommand.split(" ")[1]);
-                        drone.right(90 * degrees / 25);
-                    }else {
-                        System.out.println("Kommando nicht implementiert: " + command);
-                    }
+                    if (lowercaseCommand.startsWith("warte")) {
+                        int seconds = parseInt(lowercaseCommand.split(" ")[1]);
+                        TimeUnit.SECONDS.sleep(seconds);
+                    } else
+                        //Handling for links/rechts mit winkel
+                        if (lowercaseCommand.startsWith("links")) {
+                            int degrees = parseInt(lowercaseCommand.split(" ")[1]);
+                            drone.left(degrees);
+                        } else if (lowercaseCommand.startsWith("rechts")) {
+                            int degrees = parseInt(lowercaseCommand.split(" ")[1]);
+                            drone.right(degrees);
+                        } else {
+                            System.out.println("Kommando nicht implementiert: " + command);
+                        }
             }
         } catch (Exception e) {
             e.printStackTrace();
