@@ -21,7 +21,7 @@ Beinhaltet die folgenden 4 Modi:
 	  - (8) Spirale
 	  - (9) Slalom
   - Sound:
-      - (Y) Laut
+      - (Y) Layout
       - (X) Ohne Sound
       - (I) Monster Theme
       - (O) Insect Theme

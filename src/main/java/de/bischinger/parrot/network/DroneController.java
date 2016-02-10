@@ -1,5 +1,12 @@
 package de.bischinger.parrot.network;
 
+import de.bischinger.parrot.network.commands.common.CurrentDate;
+import de.bischinger.parrot.network.commands.common.CurrentTime;
+import de.bischinger.parrot.network.commands.common.Disconnect;
+import de.bischinger.parrot.network.commands.common.Pong;
+import de.bischinger.parrot.network.commands.js.*;
+
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -7,7 +14,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-import static de.bischinger.parrot.network.Command.*;
+import static de.bischinger.parrot.network.commands.js.Jump.Type.High;
+import static de.bischinger.parrot.network.commands.js.Jump.Type.Long;
 import static java.lang.String.format;
 import static java.net.InetAddress.getByName;
 
@@ -38,7 +46,10 @@ public class DroneController implements AutoCloseable {
 
         controller2DeviceSocket = new DatagramSocket();
 
-        this.sendCommand(Command.AllStates.getCommand(ackCounter++));
+        sendCommand(CurrentDate.currentDate().getBytes(ackCounter++));
+        sendCommand(CurrentTime.currentTime().getBytes(ackCounter++));
+
+        sendCommand(VideoStreaming.videoStreamingEnable().getBytes(ackCounter++));
 
         addAnswerSocket();
     }
@@ -48,25 +59,34 @@ public class DroneController implements AutoCloseable {
         new Thread(() -> {
             try (DatagramSocket sumoSocket = new DatagramSocket(controller2DevicePort)) {
                 logger.info(format("Listing for answers on port %s", controller2DevicePort));
-                int pingCounter = 0;
                 while (true) {
-                    byte[] buf = new byte[512];
+                    byte[] buf = new byte[65000];
 
                     DatagramPacket packet = new DatagramPacket(buf, buf.length);
                     sumoSocket.receive(packet);
                     byte[] data = packet.getData();
 
-                    //Sends pong every 4 pings
-                    //FIXME
-                    CommandReader commandReader = CommandReader.commandReader(data);
-                    if (commandReader.isPing() && pingCounter++ % 4 == 0) {
-                        pcmd(0, 0);
-                    }
-
-                    if (commandReader.isPing()) {
+                    if (data[1] == 126) {
+                        sendCommand(Pong.pong().getBytes(data[3]));
                         continue;
                     }
 
+                    if (data[1] == 125) {
+                        // videoStream.write();
+                        try (FileOutputStream fos = new FileOutputStream("video.jpeg")) {
+                            fos.write(getJpegDate(data));
+                        }
+                        continue;
+                    }
+
+                    //FIXME
+                    CommandReader commandReader = CommandReader.commandReader(data);
+                    if (commandReader.isPing() || commandReader.isLinkQualityChanged() ||
+                            commandReader.isWifiSignalChanged()) {
+                        continue;
+                    }
+
+                    //System.out.println("---" + Arrays.toString(data));
                     //logIncoming(data);
 
                     eventListeners.stream().forEach(eventListener -> eventListener.eventFired(data));
@@ -90,6 +110,7 @@ public class DroneController implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
+        sendCommand(Disconnect.disconnect().getBytes(ackCounter++));
         controller2DeviceSocket.close();
     }
 
@@ -107,102 +128,95 @@ public class DroneController implements AutoCloseable {
     protected void postSend() {
     }
 
-    private DroneController pong(byte[] data) throws IOException {
-        data[1] = 1;
-        // data[2] = pongCounter++;
-        this.sendCommand(data);
-        return this;
-    }
-
     public DroneController forward() throws IOException {
-        this.sendCommand(PCMD.getCommand(++nonackCounter, 40, 0));
+        this.sendCommand(Pcmd.pcmd(40, 0).getBytes(++nonackCounter));
         return this;
     }
 
     public DroneController backward() throws IOException {
-        this.sendCommand(PCMD.getCommand(++nonackCounter, -40, 0));
+        this.sendCommand(Pcmd.pcmd(-40, 0).getBytes(++nonackCounter));
         return this;
     }
 
     public DroneController left() throws IOException {
-        this.sendCommand(PCMD.getCommand(++nonackCounter, 0, -25));
+        this.sendCommand(Pcmd.pcmd(0, -25).getBytes(++nonackCounter));
         return this;
     }
 
     public DroneController left(int degrees) throws IOException {
         degrees = degrees % 180;
-        this.sendCommand(PCMD.getCommand(++nonackCounter, 0, -25 * degrees / 90));
+        this.sendCommand(Pcmd.pcmd(0, -25 * degrees / 90).getBytes(++nonackCounter));
         return this;
     }
 
     public DroneController right(int degrees) throws IOException {
         degrees = degrees % 180;
-        this.sendCommand(PCMD.getCommand(++nonackCounter, 0, 25 * degrees / 90));
+        this.sendCommand(Pcmd.pcmd(0, 25 * degrees / 90).getBytes(++nonackCounter));
         return this;
     }
 
     public DroneController right() throws IOException {
-        this.sendCommand(PCMD.getCommand(++nonackCounter, 0, 25));
+        this.sendCommand(Pcmd.pcmd(0, 25).getBytes(++nonackCounter));
         return this;
     }
 
     public DroneController pcmd(int speed, int turn) throws IOException {
-        this.sendCommand(PCMD.getCommand(++nonackCounter, speed, turn));
+        this.sendCommand(Pcmd.pcmd(speed, turn).getBytes(++nonackCounter));
         return this;
     }
 
     public DroneController jump(boolean high) throws IOException {
-        this.sendCommand(JUMP.getCommand(++ackCounter, high ? 1 : 0));
+        this.sendCommand(Jump.jump(high ? High : Long).getBytes(++ackCounter));
         return this;
     }
 
     public DroneController stopAnnimation() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 0));
+        this.sendCommand(StopAnimation.stopAnimation().getBytes(++ackCounter));
         return this;
     }
 
     public DroneController spin() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 1));
+        this.sendCommand(Spin.spin().getBytes(++ackCounter));
         return this;
     }
 
     public DroneController tap() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 2));
+        this.sendCommand(Tap.tap().getBytes(++ackCounter));
         return this;
     }
 
     public DroneController slowshake() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 3));
+        this.sendCommand(SlowShake.slowShake().getBytes(++ackCounter));
         return this;
     }
 
     public DroneController metronome() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 4));
+        this.sendCommand(Metronome.metronome().getBytes(++ackCounter));
         return this;
     }
 
     public DroneController ondulation() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 5));
+        this.sendCommand(Ondulation.ondulation().getBytes(++ackCounter));
         return this;
     }
 
     public DroneController spinjump() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 6));
+        this.sendCommand(SpinJump.spinJump().getBytes(++ackCounter));
         return this;
     }
 
     public DroneController spintoposture() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 7));
+        this.sendCommand(SpinToPosture.spinToPosture().getBytes(++ackCounter));
         return this;
     }
 
     public DroneController spiral() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 8));
+        this.sendCommand(Spiral.spiral().getBytes(++ackCounter));
         return this;
     }
 
     public DroneController slalom() throws IOException {
-        this.sendCommand(SimpleAnimation.getCommand(++ackCounter, 9));
+        this.sendCommand(Slalom.slalom().getBytes(++ackCounter));
         return this;
     }
 
@@ -238,6 +252,15 @@ public class DroneController implements AutoCloseable {
         return this;
     }
 
+    public DroneController addOutdoorSpeedListener(Consumer<String> consumer) {
+        this.eventListeners.add(data -> {
+            if (filterProject(data, 3, 17, 0)) {
+                consumer.accept("" + data[11]);
+            }
+        });
+        return this;
+    }
+
     private boolean filterChannel(byte[] data, int frametype, int channel) {
         return data[0] == frametype && data[1] == channel;
     }
@@ -246,39 +269,35 @@ public class DroneController implements AutoCloseable {
         return data[7] == project && data[8] == clazz && data[9] == cmd;
     }
 
-    public DroneController outdoorSpeedMax() throws IOException {
-        sendCommand(OutdoorSpeed.getCommand(++ackCounter, 1));
-        return this;
-    }
-
-    public DroneController outdoorSpeedDefault() throws IOException {
-        sendCommand(OutdoorSpeed.getCommand(++ackCounter, 0));
-        return this;
+    private byte[] getJpegDate(byte[] data) {
+        byte[] jpegData = new byte[data.length];
+        System.arraycopy(data, 12, jpegData, 0, data.length - 12);
+        return jpegData;
     }
 
     public class AudioController {
         public AudioController robotTheme() throws IOException {
-            sendCommand(AudioTheme.getCommand(++ackCounter, 1));
+            sendCommand(AudioTheme.audioTheme(1).getBytes(++ackCounter));
             return this;
         }
 
         public AudioController insectTheme() throws IOException {
-            sendCommand(AudioTheme.getCommand(++ackCounter, 2));
+            sendCommand(AudioTheme.audioTheme(2).getBytes(++ackCounter));
             return this;
         }
 
         public AudioController monsterTheme() throws IOException {
-            sendCommand(AudioTheme.getCommand(++ackCounter, 3));
+            sendCommand(AudioTheme.audioTheme(3).getBytes(++ackCounter));
             return this;
         }
 
         public AudioController mute() throws IOException {
-            sendCommand(Volume.getCommand(++ackCounter, 0));
+            sendCommand(Volume.volume(0).getBytes(++ackCounter));
             return this;
         }
 
         public AudioController unmute() throws IOException {
-            sendCommand(Volume.getCommand(++ackCounter, 100));
+            sendCommand(Volume.volume(100).getBytes(++ackCounter));
             return this;
         }
     }

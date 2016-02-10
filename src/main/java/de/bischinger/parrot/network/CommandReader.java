@@ -18,7 +18,16 @@ public class CommandReader {
         return data[0] == 2 && data[1] == 0;
     }
 
-    public boolean isAllWifiAuthChannelChanged() {
-        return data[0] == 3 && data[1] == 11 && data[2] == 4;
+    public boolean isLinkQualityChanged() {
+        return isProjectClazzCommand(3, 11, 4);
     }
+
+    public boolean isWifiSignalChanged() {
+        return isProjectClazzCommand(0, 5, 7);
+    }
+
+    private boolean isProjectClazzCommand(int project, int clazz, int command) {
+        return data[7] == project && data[8] == clazz && data[9] == command;
+    }
+
 }

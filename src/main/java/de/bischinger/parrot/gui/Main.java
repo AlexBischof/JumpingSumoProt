@@ -12,7 +12,7 @@ public class Main {
 
         String ip = "192.168.2.1";
         int port = 44444;
-        String wlan = "JumpingSumo-b169798";
+        String wlan = "JS-Alex";
 
         File configFile = new File("config.properties");
         if (configFile.exists()){
@@ -26,8 +26,8 @@ public class Main {
         if (args.length > 0) {
             switch (args[0].toLowerCase()) {
                 case "keyboard":
-                    int speedConfig = args.length > 1 ? valueOf(args[1]) : 100;
-                    int turnConfig = args.length > 2 ? valueOf(args[2]) : 30;
+                    int speedConfig = args.length > 1 ? valueOf(args[1]) : 50;
+                    int turnConfig = args.length > 2 ? valueOf(args[2]) : 25;
                     new KeyboardDriver(ip, port, wlan, speedConfig, turnConfig);
                     break;
                 case "program":
@@ -43,7 +43,8 @@ public class Main {
                     System.out.println("Argument unbekannt: keyboard | program | file | swing");
             }
         } else {
-            new KeyboardDriver(ip, port, wlan, 100, 30);
+            new KeyboardDriver(ip, port, wlan, 100, 10);
+          //  new SwingBasedProgrammaticDriver(ip, port, wlan);
         }
     }
 }
